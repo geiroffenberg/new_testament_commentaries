@@ -36,11 +36,12 @@ dependencies:
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.2.0
   google_fonts: ^8.0.2
-  google_mobile_ads: ^7.0.0
+  google_mobile_ads: ^8.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.4
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -63,6 +64,114 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/web.json
+    - assets/commentaries_json/clarke/Acts/
+    - assets/commentaries_json/clarke/Colossians/
+    - assets/commentaries_json/clarke/Ephesians/
+    - assets/commentaries_json/clarke/Galatians/
+    - assets/commentaries_json/clarke/Hebrews/
+    - assets/commentaries_json/clarke/James/
+    - assets/commentaries_json/clarke/John/
+    - assets/commentaries_json/clarke/Jude/
+    - assets/commentaries_json/clarke/Luke/
+    - assets/commentaries_json/clarke/Mark/
+    - assets/commentaries_json/clarke/Matthew/
+    - assets/commentaries_json/clarke/Philemon/
+    - assets/commentaries_json/clarke/Philippians/
+    - assets/commentaries_json/clarke/Revelation/
+    - assets/commentaries_json/clarke/Romans/
+    - assets/commentaries_json/clarke/Titus/
+    - assets/commentaries_json/clarke/1 Corinthians/
+    - assets/commentaries_json/clarke/1 John/
+    - assets/commentaries_json/clarke/1 Peter/
+    - assets/commentaries_json/clarke/1 Thessalonians/
+    - assets/commentaries_json/clarke/1 Timothy/
+    - assets/commentaries_json/clarke/2 Corinthians/
+    - assets/commentaries_json/clarke/2 John/
+    - assets/commentaries_json/clarke/2 Peter/
+    - assets/commentaries_json/clarke/2 Thessalonians/
+    - assets/commentaries_json/clarke/2 Timothy/
+    - assets/commentaries_json/clarke/3 John/
+    - assets/commentaries_json/jfb/Acts/
+    - assets/commentaries_json/jfb/Colossians/
+    - assets/commentaries_json/jfb/Ephesians/
+    - assets/commentaries_json/jfb/Galatians/
+    - assets/commentaries_json/jfb/Hebrews/
+    - assets/commentaries_json/jfb/James/
+    - assets/commentaries_json/jfb/John/
+    - assets/commentaries_json/jfb/Jude/
+    - assets/commentaries_json/jfb/Luke/
+    - assets/commentaries_json/jfb/Mark/
+    - assets/commentaries_json/jfb/Matthew/
+    - assets/commentaries_json/jfb/Philemon/
+    - assets/commentaries_json/jfb/Philippians/
+    - assets/commentaries_json/jfb/Revelation/
+    - assets/commentaries_json/jfb/Romans/
+    - assets/commentaries_json/jfb/Titus/
+    - assets/commentaries_json/jfb/1 Corinthians/
+    - assets/commentaries_json/jfb/1 John/
+    - assets/commentaries_json/jfb/1 Peter/
+    - assets/commentaries_json/jfb/1 Thessalonians/
+    - assets/commentaries_json/jfb/1 Timothy/
+    - assets/commentaries_json/jfb/2 Corinthians/
+    - assets/commentaries_json/jfb/2 John/
+    - assets/commentaries_json/jfb/2 Peter/
+    - assets/commentaries_json/jfb/2 Thessalonians/
+    - assets/commentaries_json/jfb/2 Timothy/
+    - assets/commentaries_json/jfb/3 John/
+    - assets/commentaries_json/rwp/Acts/
+    - assets/commentaries_json/rwp/Colossians/
+    - assets/commentaries_json/rwp/Ephesians/
+    - assets/commentaries_json/rwp/Galatians/
+    - assets/commentaries_json/rwp/Hebrews/
+    - assets/commentaries_json/rwp/James/
+    - assets/commentaries_json/rwp/John/
+    - assets/commentaries_json/rwp/Jude/
+    - assets/commentaries_json/rwp/Luke/
+    - assets/commentaries_json/rwp/Mark/
+    - assets/commentaries_json/rwp/Matthew/
+    - assets/commentaries_json/rwp/Philemon/
+    - assets/commentaries_json/rwp/Philippians/
+    - assets/commentaries_json/rwp/Revelation/
+    - assets/commentaries_json/rwp/Romans/
+    - assets/commentaries_json/rwp/Titus/
+    - assets/commentaries_json/rwp/1 Corinthians/
+    - assets/commentaries_json/rwp/1 John/
+    - assets/commentaries_json/rwp/1 Peter/
+    - assets/commentaries_json/rwp/1 Thessalonians/
+    - assets/commentaries_json/rwp/1 Timothy/
+    - assets/commentaries_json/rwp/2 Corinthians/
+    - assets/commentaries_json/rwp/2 John/
+    - assets/commentaries_json/rwp/2 Peter/
+    - assets/commentaries_json/rwp/2 Thessalonians/
+    - assets/commentaries_json/rwp/2 Timothy/
+    - assets/commentaries_json/rwp/3 John/
+    - assets/commentaries_json/mhcc/Acts/
+    - assets/commentaries_json/mhcc/Colossians/
+    - assets/commentaries_json/mhcc/Ephesians/
+    - assets/commentaries_json/mhcc/Galatians/
+    - assets/commentaries_json/mhcc/Hebrews/
+    - assets/commentaries_json/mhcc/James/
+    - assets/commentaries_json/mhcc/John/
+    - assets/commentaries_json/mhcc/Jude/
+    - assets/commentaries_json/mhcc/Luke/
+    - assets/commentaries_json/mhcc/Mark/
+    - assets/commentaries_json/mhcc/Matthew/
+    - assets/commentaries_json/mhcc/Philemon/
+    - assets/commentaries_json/mhcc/Philippians/
+    - assets/commentaries_json/mhcc/Revelation/
+    - assets/commentaries_json/mhcc/Romans/
+    - assets/commentaries_json/mhcc/Titus/
+    - assets/commentaries_json/mhcc/1 Corinthians/
+    - assets/commentaries_json/mhcc/1 John/
+    - assets/commentaries_json/mhcc/1 Peter/
+    - assets/commentaries_json/mhcc/1 Thessalonians/
+    - assets/commentaries_json/mhcc/1 Timothy/
+    - assets/commentaries_json/mhcc/2 Corinthians/
+    - assets/commentaries_json/mhcc/2 John/
+    - assets/commentaries_json/mhcc/2 Peter/
+    - assets/commentaries_json/mhcc/2 Thessalonians/
+    - assets/commentaries_json/mhcc/2 Timothy/
+    - assets/commentaries_json/mhcc/3 John/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -89,3 +198,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  android: true
+  image_path: 'assets/NT_icon.png'
+  adaptive_icon_background: '#2F6B33'

@@ -24,11 +24,10 @@ class BibleReader extends StatefulWidget {
 class _BibleReaderState extends State<BibleReader> {
   static const String _lastBookKey = 'last_read_book';
   static const String _lastOffsetKey = 'last_read_offset';
-  static const double _menuRowHeight = 54;
 
   final BibleService _bibleService = BibleService();
   final NoteService _noteService = NoteService.instance;
-  final CommentaryService _commentaryService = MockCommentaryService();
+  final CommentaryService _commentaryService = JsonCommentaryService();
   late Future<List<Verse>> _bibleFuture;
   List<String> _books = [];
   String? _selectedBook;
@@ -51,6 +50,13 @@ class _BibleReaderState extends State<BibleReader> {
   bool _isLoadingCommentary = false;
   String? _commentaryText;
   int _commentaryRequestId = 0;
+
+  static final RegExp _commentaryHighlightPattern = RegExp(
+    r'\bVerses?\s+\d+(?:\s*[-–]\s*\d+)?\b'
+    r'|\b\d{1,3}\.(?=\s)'
+    r'|[\u0370-\u03FF\u1F00-\u1FFF]+',
+    caseSensitive: false,
+  );
 
   void _loadBannerAd() {
     final adUnitId = AdMobConfig.bannerAdUnitId;
@@ -363,69 +369,197 @@ class _BibleReaderState extends State<BibleReader> {
     );
   }
 
+  bool _isVerseMarkerToken(String token) {
+    return RegExp(
+      r'^Verses?\s+\d+(?:\s*[-–]\s*\d+)?$',
+      caseSensitive: false,
+    ).hasMatch(token);
+  }
+
+  bool _isNumberedVerseStarter(String token) {
+    return RegExp(r'^\d{1,3}\.$').hasMatch(token);
+  }
+
+  bool _isGreekToken(String token) {
+    return RegExp(r'^[\u0370-\u03FF\u1F00-\u1FFF]+$').hasMatch(token);
+  }
+
+  TextSpan _buildFormattedCommentarySpan(String text, double bodySize) {
+    final defaultStyle = TextStyle(
+      fontSize: bodySize,
+      height: 1.6,
+      color: const Color(0xFF1A1A1A),
+    );
+    final verseMarkerStyle = TextStyle(
+      fontSize: bodySize,
+      height: 1.6,
+      color: const Color(0xFF1F4B25),
+      fontWeight: FontWeight.w700,
+    );
+    final greekStyle = TextStyle(
+      fontSize: bodySize,
+      height: 1.6,
+      color: const Color(0xFF1E5A8A),
+      fontStyle: FontStyle.italic,
+      fontWeight: FontWeight.w600,
+    );
+
+    final spans = <TextSpan>[];
+    int cursor = 0;
+
+    for (final match in _commentaryHighlightPattern.allMatches(text)) {
+      if (match.start > cursor) {
+        spans.add(TextSpan(text: text.substring(cursor, match.start)));
+      }
+
+      final token = match.group(0)!;
+      if (_isVerseMarkerToken(token) || _isNumberedVerseStarter(token)) {
+        spans.add(TextSpan(text: token, style: verseMarkerStyle));
+      } else if (_isGreekToken(token)) {
+        spans.add(TextSpan(text: token, style: greekStyle));
+      } else {
+        spans.add(TextSpan(text: token));
+      }
+
+      cursor = match.end;
+    }
+
+    if (cursor < text.length) {
+      spans.add(TextSpan(text: text.substring(cursor)));
+    }
+
+    return TextSpan(style: defaultStyle, children: spans);
+  }
+
   Widget _buildCommentaryPanel() {
-    if (!_isCommentaryPanelOpen || _selectedVerse == null) {
+    if (_selectedVerse == null) {
       return const SizedBox.shrink();
     }
 
     final verse = _selectedVerse!;
     final commentaryTitle = _activeCommentary.fullTitle;
+    final double titleSize = 14 * _textScale;
+    final double referenceSize = 12.5 * _textScale;
+    final double bodySize = 16 * _textScale;
+    final double panelHeight =
+      (MediaQuery.of(context).size.height * 0.56).clamp(280.0, 520.0);
 
-    return Container(
+    final panel = Container(
       width: double.infinity,
+      // Keep a consistent panel size so loading/empty/content states feel stable.
+      height: panelHeight,
       decoration: BoxDecoration(
         color: const Color(0xFFFFF9DB),
         border: Border(
-          top: BorderSide(color: Colors.green.shade100, width: 1),
-          bottom: BorderSide(color: Colors.green.shade100, width: 1),
+          top: BorderSide(color: const Color(0xFF2F6B33), width: 1.5),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.10),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 8, 4),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '$commentaryTitle - ${verse.reference}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                      color: Color(0xFF1F4B25),
+          // Header row
+          Container(
+            width: double.infinity,
+            color: const Color(0xFF2F6B33),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 6, 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          commentaryTitle,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: titleSize,
+                            color: Colors.white,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                        Text(
+                          verse.reference,
+                          style: TextStyle(
+                            fontSize: referenceSize,
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                IconButton(
-                  tooltip: 'Close commentary',
-                  onPressed: _closeCommentaryPanel,
-                  visualDensity: VisualDensity.compact,
-                  icon: const Icon(Icons.close),
-                ),
-              ],
+                  IconButton(
+                    tooltip: 'Close commentary',
+                    onPressed: _closeCommentaryPanel,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.close, size: 20, color: Colors.white),
+                  ),
+                ],
+              ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+          const Divider(height: 1, thickness: 1),
+          // Scrollable content
+          Flexible(
             child: _isLoadingCommentary
                 ? const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2.2),
+                    padding: EdgeInsets.all(16),
+                    child: Center(
+                      child: SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2.2),
+                      ),
                     ),
                   )
-                : Text(
-                    _commentaryText ??
-                        'No commentary entry found for this verse yet in $commentaryTitle.',
-                    style: const TextStyle(fontSize: 14, height: 1.35),
+                : Scrollbar(
+                    thumbVisibility: true,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+                      child: SelectableText.rich(
+                        _buildFormattedCommentarySpan(
+                          _commentaryText ??
+                              'No commentary entry found for this verse in $commentaryTitle.',
+                          bodySize,
+                        ),
+                      ),
+                    ),
                   ),
           ),
         ],
       ),
+    );
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: _isCommentaryPanelOpen ? 1 : 0),
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      child: panel,
+      builder: (context, value, child) {
+        return IgnorePointer(
+          ignoring: value < 0.02,
+          child: ClipRect(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              heightFactor: value,
+              child: Transform.translate(
+                offset: Offset(0, (1 - value) * 24),
+                child: child,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -653,7 +787,7 @@ class _BibleReaderState extends State<BibleReader> {
         child: Tooltip(
           message: tooltip,
           child: Container(
-            height: _menuRowHeight,
+            height: 54,
             decoration: BoxDecoration(
               color: const Color(0xFF2F6B33),
               border: Border(
@@ -778,96 +912,93 @@ class _BibleReaderState extends State<BibleReader> {
               ),
               // Book Selection
               Container(
+                height: 54,
                 color: const Color(0xFFFFF9DB),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Row(
                   children: [
                     Expanded(
-                      child: SizedBox(
-                        height: _menuRowHeight,
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            isExpanded: true,
-                            value: _selectedBook,
-                            dropdownColor: const Color(0xFFFFF9DB),
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                            items: _books
-                                .map(
-                                  (book) => DropdownMenuItem(
-                                    value: book,
-                                    child: Text(
-                                      book,
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          isDense: true,
+                          isExpanded: true,
+                          value: _selectedBook,
+                          dropdownColor: const Color(0xFFFFF9DB),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                          items: _books
+                              .map(
+                                (book) => DropdownMenuItem(
+                                  value: book,
+                                  child: Text(
+                                    book,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                )
-                                .toList(),
-                            onChanged: (book) {
-                              if (book != null) {
-                                _loadBook(book);
-                                WidgetsBinding.instance.addPostFrameCallback((_) {
-                                  final firstChapter = _selectedChapter;
-                                  if (firstChapter != null) {
-                                    _jumpToChapter(firstChapter);
-                                  }
-                                });
-                              }
-                            },
-                          ),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (book) {
+                            if (book != null) {
+                              _loadBook(book);
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                final firstChapter = _selectedChapter;
+                                if (firstChapter != null) {
+                                  _jumpToChapter(firstChapter);
+                                }
+                              });
+                            }
+                          },
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: SizedBox(
-                        height: _menuRowHeight,
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<int>(
-                            isExpanded: true,
-                            value: _selectedChapter,
-                            dropdownColor: const Color(0xFFFFF9DB),
-                            hint: const Text(
-                              'Chapter',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
-                            ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<int>(
+                          isDense: true,
+                          isExpanded: true,
+                          value: _selectedChapter,
+                          dropdownColor: const Color(0xFFFFF9DB),
+                          hint: const Text(
+                            'Chapter',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
                               color: Colors.black87,
                             ),
-                            items: chapters
-                                .map(
-                                  (chapter) => DropdownMenuItem<int>(
-                                    value: chapter,
-                                    child: Text(
-                                      'Chapter $chapter',
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                          ),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                          items: chapters
+                              .map(
+                                (chapter) => DropdownMenuItem<int>(
+                                  value: chapter,
+                                  child: Text(
+                                    'Chapter $chapter',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                )
-                                .toList(),
-                            onChanged: (chapter) {
-                              if (chapter == null) return;
-                              setState(() {
-                                _selectedChapter = chapter;
-                              });
-                              _jumpToChapter(chapter);
-                            },
-                          ),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (chapter) {
+                            if (chapter == null) return;
+                            setState(() {
+                              _selectedChapter = chapter;
+                            });
+                            _jumpToChapter(chapter);
+                          },
                         ),
                       ),
                     ),
