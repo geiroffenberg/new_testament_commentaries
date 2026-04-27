@@ -34,6 +34,7 @@ class _BibleReaderState extends State<BibleReader> {
   int? _selectedChapter;
   List<Verse> _currentBookVerses = [];
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _commentaryScrollController = ScrollController();
   final Map<int, GlobalKey> _chapterHeaderKeys = {};
   final Map<String, GlobalKey> _verseKeys = {};
   Timer? _savePositionTimer;
@@ -523,8 +524,10 @@ class _BibleReaderState extends State<BibleReader> {
                     ),
                   )
                 : Scrollbar(
+                    controller: _commentaryScrollController,
                     thumbVisibility: true,
                     child: SingleChildScrollView(
+                      controller: _commentaryScrollController,
                       padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
                       child: SelectableText.rich(
                         _buildFormattedCommentarySpan(
@@ -812,6 +815,7 @@ class _BibleReaderState extends State<BibleReader> {
     _bannerAd?.dispose();
     _scrollController.removeListener(_onScrollChanged);
     _scrollController.dispose();
+    _commentaryScrollController.dispose();
     super.dispose();
   }
 

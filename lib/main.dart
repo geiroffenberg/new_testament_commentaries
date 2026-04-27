@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -6,7 +7,10 @@ import 'screens/bible_reader.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await MobileAds.instance.initialize();
+  // google_mobile_ads is not implemented for Flutter web.
+  if (!kIsWeb) {
+    await MobileAds.instance.initialize();
+  }
   runApp(const MyApp());
 }
 
